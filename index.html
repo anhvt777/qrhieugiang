@@ -61,7 +61,6 @@
       <input id="searchInput" type="text" placeholder="Tìm theo Tên tài khoản (cột E) hoặc Mã số thuế (cột G)..." />
       <select id="phuongSelect"><option value="">-- Chọn Phường/Xã --</option></select>
       <select id="thonSelect"><option value="">-- Chọn Thôn/Tổ --</option></select>
-      <select id="colHSelect"><option value="">-- Chọn Cột H --</option></select>
     </div>
     <div class="right">
       <button id="clearBtn">Xóa bộ lọc</button>
@@ -100,7 +99,6 @@ const tbody = document.querySelector('#resultTable tbody');
 const searchInput = document.getElementById('searchInput');
 const phuongSelect = document.getElementById('phuongSelect');
 const thonSelect = document.getElementById('thonSelect');
-const colHSelect = document.getElementById('colHSelect');
 const pageInfo = document.getElementById('pageInfo');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
@@ -110,7 +108,7 @@ const qrcodeDiv = document.getElementById('qrcode');
 
 function init(){
   populatePhuongOptions();
-  populateColHOptions();
+  populateThonOptions('');
   updateStats();
   render();
   attachEvents();
@@ -122,15 +120,14 @@ function populatePhuongOptions(){
   const arr = Array.from(set).filter(v=>v).sort((a,b)=>a.localeCompare(b,'vi'));
   arr.forEach(v=>{ const opt=document.createElement('option'); opt.value=v; opt.textContent=v; phuongSelect.appendChild(opt); });
   phuongSelect.addEventListener('change', ()=>{ populateThonOptions(phuongSelect.value); searchAndRender(); });
-  populateThonOptions('');
 }
 
 function populateThonOptions(phuong){
   thonSelect.innerHTML = '<option value="">-- Chọn Thôn/Tổ --</option>';
   const set = new Set();
   data.forEach(r=>{
-    if(r['THÔN/TỔ/KHU PHỐ']){
-      if(!phuong || (r['PHƯỜNG/XÃ']===phuong)) set.add(r['THÔN/TỔ/KHU PHỐ']);
+    if(r['Cột H']){ // cột H trong file Excel/data.json
+      if(!phuong || (r['PHƯỜNG/XÃ']===phuong)) set.add(r['Cột H']);
     }
   });
   const arr = Array.from(set).filter(v=>v).sort((a,b)=>a.localeCompare(b,'vi'));
@@ -138,28 +135,17 @@ function populateThonOptions(phuong){
   thonSelect.addEventListener('change', ()=>searchAndRender());
 }
 
-function populateColHOptions(){
-  colHSelect.innerHTML = '<option value="">-- Chọn Cột H --</option>';
-  const set = new Set();
-  data.forEach(r=>{ if(r['H']) set.add(r['H']); });
-  const arr = Array.from(set).filter(v=>v).sort((a,b)=>a.localeCompare(b,'vi'));
-  arr.forEach(v=>{ const opt=document.createElement('option'); opt.value=v; opt.textContent=v; colHSelect.appendChild(opt); });
-  colHSelect.addEventListener('change', ()=>searchAndRender());
-}
-
 function searchAndRender(){
   const kw = searchInput.value.trim().toLowerCase();
   const ph = phuongSelect.value;
   const th = thonSelect.value;
-  const hVal = colHSelect.value;
   filtered = data.filter(r=>{
     const name = (r['AccountName']||'').toString().toLowerCase();
     const mst = (r['MST']||'').toString().toLowerCase();
     const matchSearch = !kw || name.includes(kw) || mst.includes(kw);
     const matchPh = !ph || (r['PHƯỜNG/XÃ']===ph);
-    const matchTh = !th || (r['THÔN/TỔ/KHU PHỐ']===th);
-    const matchH = !hVal || (r['H']===hVal);
-    return matchSearch && matchPh && matchTh && matchH;
+    const matchTh = !th || (r['Cột H']===th);
+    return matchSearch && matchPh && matchTh;
   });
   page = 1;
   updateStats();
@@ -221,7 +207,6 @@ function attachEvents(){
     phuongSelect.value=''; 
     populateThonOptions(''); 
     thonSelect.value=''; 
-    colHSelect.value=''; 
     searchAndRender(); 
   });
 }
