@@ -126,8 +126,8 @@ function populateThonOptions(phuong){
   thonSelect.innerHTML = '<option value="">-- Chọn Thôn/Tổ --</option>';
   const set = new Set();
   data.forEach(r=>{
-    if(r['Cột H']){ // cột H trong file Excel/data.json
-      if(!phuong || (r['PHƯỜNG/XÃ']===phuong)) set.add(r['Cột H']);
+    if(r['Khu phố']){
+      if(!phuong || (r['PHƯỜNG/XÃ']===phuong)) set.add(r['Khu phố']);
     }
   });
   const arr = Array.from(set).filter(v=>v).sort((a,b)=>a.localeCompare(b,'vi'));
@@ -144,7 +144,7 @@ function searchAndRender(){
     const mst = (r['MST']||'').toString().toLowerCase();
     const matchSearch = !kw || name.includes(kw) || mst.includes(kw);
     const matchPh = !ph || (r['PHƯỜNG/XÃ']===ph);
-    const matchTh = !th || (r['Cột H']===th);
+    const matchTh = !th || (r['Khu phố']===th);
     return matchSearch && matchPh && matchTh;
   });
   page = 1;
