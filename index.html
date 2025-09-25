@@ -54,13 +54,14 @@
   <div class="title">BIDV - PGD Đường 9 - Tra cứu &amp; Tạo QR thanh toán Thuế PNN xã Hiếu Giang</div>
   <div class="meta">Tìm kiếm theo tên NNT, đối chiếu thông tin, chọn để sinh QR</div>
 </header>
-<div class="marquee"><span>BIDV đồng hành cùng thuế Nhà nước – Nộp thuế nhanh chóng qua QR Code                    🎉 Ưu đãi đặc biệt: TẶNG TIỀN khi mở Tài khoản BIDV | TẶNG LOA THÔNG BÁO CHO HỘ KD, TẶNG TIỀN lên đến 600.000 VNĐ vào TK | Lãi suất vay ưu đãi chỉ từ 4,5%/năm | Liên hệ Mr. Mạnh Hùng (0914 179 989) để biết thêm chi tiết 🎉</span></div>
+<div class="marquee"><span>BIDV đồng hành cùng thuế Nhà nước – Nộp thuế nhanh chóng qua QR Code 🎉 Ưu đãi đặc biệt: TẶNG TIỀN khi mở Tài khoản BIDV | TẶNG LOA THÔNG BÁO CHO HỘ KD, TẶNG TIỀN lên đến 600.000 VNĐ vào TK | Lãi suất vay ưu đãi chỉ từ 4,5%/năm | Liên hệ Mr. Mạnh Hùng (0914 179 989) để biết thêm chi tiết 🎉</span></div>
 <div class="container">
   <div class="controls">
     <div class="left">
       <input id="searchInput" type="text" placeholder="Tìm theo Tên tài khoản (cột E) hoặc Mã số thuế (cột G)..." />
       <select id="phuongSelect"><option value="">-- Chọn Phường/Xã --</option></select>
-      <select id="thonSelect"><option value="">-- Chọn Thôn/Tổ  --</option></select>
+      <select id="thonSelect"><option value="">-- Chọn Thôn/Tổ --</option></select>
+      <select id="colHSelect"><option value="">-- Chọn Cột H --</option></select>
     </div>
     <div class="right">
       <button id="clearBtn">Xóa bộ lọc</button>
@@ -99,6 +100,7 @@ const tbody = document.querySelector('#resultTable tbody');
 const searchInput = document.getElementById('searchInput');
 const phuongSelect = document.getElementById('phuongSelect');
 const thonSelect = document.getElementById('thonSelect');
+const colHSelect = document.getElementById('colHSelect');
 const pageInfo = document.getElementById('pageInfo');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
@@ -108,6 +110,7 @@ const qrcodeDiv = document.getElementById('qrcode');
 
 function init(){
   populatePhuongOptions();
+  populateColHOptions();
   updateStats();
   render();
   attachEvents();
@@ -135,17 +138,28 @@ function populateThonOptions(phuong){
   thonSelect.addEventListener('change', ()=>searchAndRender());
 }
 
+function populateColHOptions(){
+  colHSelect.innerHTML = '<option value="">-- Chọn Cột H --</option>';
+  const set = new Set();
+  data.forEach(r=>{ if(r['H']) set.add(r['H']); });
+  const arr = Array.from(set).filter(v=>v).sort((a,b)=>a.localeCompare(b,'vi'));
+  arr.forEach(v=>{ const opt=document.createElement('option'); opt.value=v; opt.textContent=v; colHSelect.appendChild(opt); });
+  colHSelect.addEventListener('change', ()=>searchAndRender());
+}
+
 function searchAndRender(){
   const kw = searchInput.value.trim().toLowerCase();
   const ph = phuongSelect.value;
   const th = thonSelect.value;
+  const hVal = colHSelect.value;
   filtered = data.filter(r=>{
     const name = (r['AccountName']||'').toString().toLowerCase();
     const mst = (r['MST']||'').toString().toLowerCase();
     const matchSearch = !kw || name.includes(kw) || mst.includes(kw);
     const matchPh = !ph || (r['PHƯỜNG/XÃ']===ph);
     const matchTh = !th || (r['THÔN/TỔ/KHU PHỐ']===th);
-    return matchSearch && matchPh && matchTh;
+    const matchH = !hVal || (r['H']===hVal);
+    return matchSearch && matchPh && matchTh && matchH;
   });
   page = 1;
   updateStats();
@@ -202,7 +216,14 @@ nextBtn.addEventListener('click', ()=>{ const tot=Math.ceil(filtered.length/perP
 
 function attachEvents(){
   searchInput.addEventListener('input', ()=>{ searchAndRender(); });
-  clearBtn.addEventListener('click', ()=>{ searchInput.value=''; phuongSelect.value=''; populateThonOptions(''); thonSelect.value=''; searchAndRender(); });
+  clearBtn.addEventListener('click', ()=>{ 
+    searchInput.value=''; 
+    phuongSelect.value=''; 
+    populateThonOptions(''); 
+    thonSelect.value=''; 
+    colHSelect.value=''; 
+    searchAndRender(); 
+  });
 }
 
 function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
